@@ -4,78 +4,117 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}GitSim{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/shell/shell.min.js"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/js/all.min.js"></script>
-
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
+        html { scroll-behavior: smooth; }
+        body { background: #0b0f1a; }
+        .card { background: rgba(17, 24, 39, 0.7); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 1rem; }
+        .field {
+            width: 100%; background: #0f1524; border: 1px solid #263045; border-radius: 0.6rem;
+            padding: 0.6rem 0.8rem; color: #e5e7eb; font-size: 0.875rem; transition: border-color .15s, box-shadow .15s;
         }
+        .field::placeholder { color: #64748b; }
+        .field:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+            padding: 0.55rem 1rem; border-radius: 0.6rem; font-weight: 600; font-size: 0.875rem;
+            transition: background-color .15s, opacity .15s, transform .05s;
+        }
+        .btn:active:not(:disabled) { transform: translateY(1px); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-primary { background: #6366f1; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #4f46e5; }
+        .btn-ghost { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.08); }
+        .btn-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); color: white; }
+        :focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }
+        .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #263045; border-radius: 999px; }
     </style>
 </head>
-<body class="bg-white text-gray-900">
+<body class="text-slate-200 font-sans antialiased">
 
     <!-- Navbar -->
-    <nav class="bg-gray-900 shadow-lg p-4 fixed w-full top-0 z-50">
-        <div class="container mx-auto flex justify-between items-center">
-            <!-- Logo -->
-            <a href="/" class="text-2xl font-bold flex items-center gap-2 text-gray-300 hover:text-white transition-all duration-300">
-                <i class="ph ph-git-branch text-indigo-500 text-3xl"></i> GitSim
+    <nav class="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-[#0b0f1a]/80 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+            <a href="{{ url_for('index') }}" class="flex items-center gap-2 text-lg font-bold text-white">
+                <span class="grid h-8 w-8 place-items-center rounded-lg bg-indigo-500/15 text-indigo-400">
+                    <i class="ph-bold ph-git-branch text-xl"></i>
+                </span>
+                GitSim
             </a>
 
-            <!-- Hamburger Menu Button (Visible on Mobile) -->
-            <button id="menu-toggle" class="md:hidden text-gray-300 hover:text-white focus:outline-none">
-                <i class="fas fa-bars text-2xl"></i>
+            <button id="menu-toggle" class="rounded-lg p-2 text-slate-300 hover:bg-white/5 hover:text-white md:hidden" aria-label="Toggle menu" aria-expanded="false">
+                <i class="ph ph-list text-2xl"></i>
             </button>
 
-            <!-- Navbar Links -->
-            <div id="nav-links" class="hidden md:flex md:items-center md:space-x-8 flex-col md:flex-row absolute md:static top-16 left-0 w-full md:w-auto bg-gray-900 md:bg-transparent p-4 md:p-0 transition-all duration-300">
-                <a href="/" class="text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 py-2 md:py-0">
-                    <i class="fa fa-home text-lg"></i> Home
+            <div id="nav-links" class="absolute left-0 top-16 hidden w-full flex-col gap-1 border-b border-white/5 bg-[#0b0f1a] p-4 md:static md:flex md:w-auto md:flex-row md:items-center md:gap-6 md:border-0 md:bg-transparent md:p-0">
+                <a href="{{ url_for('index') }}#features" class="py-2 text-sm text-slate-400 hover:text-white md:py-0">Features</a>
+                <a href="{{ url_for('index') }}#how" class="py-2 text-sm text-slate-400 hover:text-white md:py-0">How it works</a>
+                <a href="{{ url_for('index') }}#team" class="py-2 text-sm text-slate-400 hover:text-white md:py-0">Team</a>
+                <a href="{{ url_for('simulation') }}" class="btn btn-primary mt-2 md:mt-0">
+                    <i class="ph-bold ph-play"></i> Open Simulator
                 </a>
-                <a href="#features" class="text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 py-2 md:py-0">
-                    <i class="fa fa-cogs text-lg"></i> Features
+                {% if current_user %}
+                <div class="flex items-center gap-3 border-t border-white/5 pt-3 md:border-0 md:pt-0">
+                    {% if current_user.avatar %}
+                    <img src="{{ current_user.avatar }}" alt="" class="h-8 w-8 rounded-full ring-2 ring-white/10" referrerpolicy="no-referrer">
+                    {% else %}
+                    <span class="grid h-8 w-8 place-items-center rounded-full bg-indigo-500/20 text-sm font-semibold text-indigo-200">{{ current_user.name[:1] | upper }}</span>
+                    {% endif %}
+                    <span class="max-w-[10rem] truncate text-sm text-slate-300" title="Signed in with {{ current_user.provider }}">{{ current_user.name }}</span>
+                    <a href="{{ url_for('logout') }}" class="text-sm text-slate-500 hover:text-white">Sign out</a>
+                </div>
+                {% else %}
+                <a href="{{ url_for('login_page') }}" class="btn btn-ghost mt-1 md:mt-0">
+                    <i class="ph-bold ph-sign-in"></i> Sign in
                 </a>
-                <a href="#team" class="text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 py-2 md:py-0">
-                    <i class="fa fa-user text-lg"></i> Developers
-                </a>
+                {% endif %}
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="min-h-screen pt-20">
+    <main class="min-h-screen pt-16">
         {% block content %}{% endblock %}
-    </div>
+    </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white p-4 text-center">
-        <p>© 2025 GitSim. All rights reserved.</p>
+    <footer class="border-t border-white/5 py-8 text-center text-sm text-slate-500">
+        © 2025 GitSim · An interactive Git learning playground
     </footer>
 
-    <!-- JavaScript for Navbar Toggle -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const menuToggle = document.getElementById("menu-toggle");
             const navLinks = document.getElementById("nav-links");
 
             menuToggle.addEventListener("click", function () {
-                navLinks.classList.toggle("hidden");
+                const open = navLinks.classList.toggle("hidden") === false;
+                menuToggle.setAttribute("aria-expanded", String(open));
             });
 
-            // Optional: Close menu when clicking a link on mobile
+            // Close the mobile menu after picking a link
             navLinks.querySelectorAll("a").forEach(link => {
                 link.addEventListener("click", () => {
-                    if (!navLinks.classList.contains("md:flex")) {
-                        navLinks.classList.add("hidden");
-                    }
+                    if (window.innerWidth < 768) navLinks.classList.add("hidden");
                 });
             });
         });
     </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>
